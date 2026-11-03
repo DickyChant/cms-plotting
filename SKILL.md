@@ -1,6 +1,6 @@
 ---
 name: cms-plotting
-description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results. Use whenever writing or editing code that saves a plot in a HEP/CMS analysis, before reporting any fitted number, or when choosing figures for a note or slides.
+description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results, in matplotlib/mplhep and in Plotly/plotlyhep (interactive figures for HTML slides). Use whenever writing or editing code that saves or embeds a plot in a HEP/CMS analysis (matplotlib, mplhep, plotly, plotlyhep), before reporting any fitted number, or when choosing figures for a note or slides.
 ---
 
 # CMS plotting
@@ -17,7 +17,8 @@ python <skill base dir>/lint.py path/to/script.py --style-module <pkg>.plotting
 ```
 
 A project without a plotting module: copy `cmsplot.py` into it (do not import it from the skills folder, which
-changes on every `git pull`).
+changes on every `git pull`). For Plotly canvases the same holds for `cmsplot_plotly.py` (see "Plotly (plotlyhep)"
+below); `lint.py` covers both.
 
 ## Hard rules
 
@@ -72,6 +73,43 @@ canvas, never a new hue. A species keeps its colour across every canvas of a stu
 - per-bin / per-slice fits: one canvas per bin with the bin range in the legend title, plus summary canvases
   (per-bin χ² vs bin, fitted parameter vs bin).
 
+## Plotly (plotlyhep)
+
+`cmsplot_plotly.py` is the same style for Plotly, built on plotlyhep (mplhep mirrored for Plotly; not on PyPI:
+`pip install git+https://github.com/DickyChant/plotlyhep`, needs `kaleido>=1` for PNG/PDF). Use it when the figure
+lives in HTML: slide decks that embed live figures (hover for values, no PNGs), dashboards, web reports. A note or a
+paper still takes matplotlib PNG/PDF. The hard rules above apply unchanged; `template_plotly.py --demo <name>`
+draws the same five canvases (`examples/plotly_*.png`).
+
+Plotly has no axes objects: one `go.Figure` per canvas, and `ax` / `axp` are axis references
+(`{"xaxis": "x2", "yaxis": "y2"}`) passed as `ax=` to every drawing helper (default: the main panel).
+
+| matplotlib (`cmsplot`) | Plotly (`cmsplot_plotly`) |
+|---|---|
+| `fig, ax, axp = fit_figure()` | `fig, ax, axp = fit_figure()` (780 × 660 px; `three=True`: 780 × 760) |
+| `plt.subplots(figsize=PLAIN_SIZE)` | `fig = figure()` (780 × 520 px; one font scale for every size) |
+| `cms_label(ax, com=13.6, rlabel=...)` | `cms_label(fig, com=13.6, rlabel=...)`; HTML in labels: `fb<sup>−1</sup>` |
+| `ax.set_xlabel` / `ax.set_ylabel(bin_label(bw))` | `xlabel(fig, ...)` / `ylabel(fig, bin_label(bw))` (mplhep placement); lower panels `ylabel(fig, "pull", ax=axp)` |
+| `data_points(ax, cen, h, err)` | `data_points(fig, cen, h, err)` -- add data last, it draws on top |
+| `ax.plot(..., color=SERIES["total"], lw=2)` | `line(fig, x, y, SERIES["total"], "fit")`; background `dash="dash", width=1.5` |
+| `ax.fill_between(..., alpha=0.45, lw=0)` | `fill_between(fig, x, lo, hi, SERIES["s1"], "signal: N ± dN")` |
+| `histtype="step"` / `drawstyle="steps-mid"` | `step(fig, edges, values, color, label)` |
+| `draw_pull(axp, ...)`, `draw_bkgsub(axb, ...)` | `draw_pull(fig, axp, ...)`, `draw_bkgsub(fig, axb, ...)` |
+| `legend(ax, title=selection)`, `headroom(ax, top)` | `legend(fig, title=selection)`, `headroom(fig, top)` |
+| `ax.axhline(0, color="grey", lw=0.8)` | `zero_line(fig, ax)` |
+| `save(fig, "plots/x.png")` | `save(fig, "plots/x.png")` -- writes x.json (to embed) and x.png (kaleido, 1.4×) |
+| -- | `embed(fig, "fig-id")` per figure + `head_script()` once per page |
+
+Plotly-specific:
+- Shaded ranges (signal window, sidebands, a cut) with `region(fig, x0, x1, "signal window 2.95–3.25 GeV")`: the
+  shape plus a legend entry. Never `add_annotation` text to name them -- that is prose on the canvas.
+- Hover text is fine (it is not drawn); put the per-point numbers there rather than on the canvas.
+- No `update_layout(title=...)`: the selection goes in the legend title, as in matplotlib.
+- Embedding: keep the figure's own template (`inherit_template=False`, the default of `embed`), so the slide shows
+  the same canvas as the PNG. Plotly sizes are CSS px; convert matplotlib points with `plotlyhep._units.pt2px`.
+- Plotly reverses the legend when a trace has a fill; `legend()` forces the drawing order.
+- Look before you send applies here too: render the PNG (`save`) and open it, or screenshot the slide.
+
 ## Notes and slides
 
 Captions state exactly what is drawn (how many curves, which sample, which luminosity). A label bug is
@@ -81,5 +119,5 @@ files, caption) next to a LaTeX note; `\graphicspath` to the plots folder instea
 ## Improving this skill
 
 Shared across projects from the public repo github.com/DickyChant/cms-plotting (this folder is a clone of
-it). To change a rule or the style: edit here, run `python template.py --outdir examples`, look at the
-canvases, then commit and push (or open a pull request). Keep it generic: no analysis results, luminosities of unpublished data, or sample paths.
+it). To change a rule or the style: edit here, run `python template.py --outdir examples` (and
+`python template_plotly.py --outdir examples` for the Plotly module), look at the canvases, then commit and push (or open a pull request). Keep it generic: no analysis results, luminosities of unpublished data, or sample paths.
