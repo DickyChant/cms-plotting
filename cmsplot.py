@@ -48,6 +48,43 @@ def cms_label(ax, com=13.6, data=True, rlabel=None, fontsize=15, status="Work in
     if not _HEP:
         return
     hep.cms.label(status, data=data, com=com, ax=ax, rlabel=rlabel, fontsize=fontsize)
+    _fix_appended_labels(ax)
+
+
+def _fix_appended_labels(ax):
+    """mplhep 1.1 with matplotlib >= 3.11: mplhep's append_text() unpacks the private Text._get_layout(), whose
+    third value changed from the line descent to a (corner, size) pair, so the label appended to 'CMS'
+    ('Work in Progress') gets an array as its y position and the figure no longer draws. Put such a label
+    where mplhep means it to go: on the line of the text to its left (public API only; no-op otherwise)."""
+    import matplotlib.text as mtext
+
+    texts = [t for t in ax.findobj(mtext.Text) if t.get_text()]
+    scalar = lambda t: np.ndim(t.get_position()[0]) == 0 and np.ndim(t.get_position()[1]) == 0  # noqa: E731
+    broken = [t for t in texts if not scalar(t)]
+    if not broken:
+        return
+    fig = ax.figure
+    r = fig.canvas.get_renderer()
+    ax_h = ax.get_position().height * fig.get_size_inches()[1] * fig.dpi  # axes height in px
+    for t in broken:
+        bx = float(np.ravel(t.get_position()[0])[0])
+        left = [u for u in texts if scalar(u) and u.get_transform() == t.get_transform() and u.get_position()[0] < bx]
+        if not left:
+            continue
+        ref = max(left, key=lambda u: u.get_position()[0])
+        prop = ref.get_fontproperties()
+        # matplotlib's own line descent: max of the text's and of "lp"
+        d = max(r.get_text_width_height_descent(ref.get_text(), prop, ismath=False)[2],
+                r.get_text_width_height_descent("lp", prop, ismath=False)[2])
+        ry, va = float(ref.get_position()[1]), ref.get_verticalalignment()
+        if va == "bottom":
+            y = ry + d / ax_h
+        elif va == "top":
+            y = ry + d / ax_h - ref.get_window_extent(r).height / ax_h
+        else:  # baseline
+            y = ry
+        t.set_position((bx, y))
+        t.set_verticalalignment("baseline")
 
 
 def make_fit_axes(fig, subplotspec):
