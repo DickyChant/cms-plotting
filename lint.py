@@ -70,7 +70,7 @@ def lint(path, style=None):
             hits.append((i, "title on the canvas -> no titles; use the legend title for the selection", line.strip()))
     text = "\n".join(src)
     uses_style = (style in text) if style else bool(re.search(r"\b(cmsplot|cmsplot_plotly|\w*plotting)\b", text))
-    saves = any(k in text for k in ("savefig", "write_image", "write_html", "write_json"))
+    saves = bool(re.search(r"\.(savefig|write_image|write_html|write_json)\(|(?<![\w.])save\(\s*fig", text))
     if saves and not uses_style:
         hits.append((0, f"saves figures without importing the style module ({style or 'cmsplot / cmsplot_plotly / *plotting'})", ""))
     if saves and not re.search(r"cms_label|cms\.label", text):
