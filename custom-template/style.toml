@@ -1,0 +1,32 @@
+# Project plotting customization, read by the cms-plotting skill, lint.py and cmsproject.py.
+# Copy this folder to <project>/.claude/cms-plotting/ and replace the placeholders.
+
+# the project's style module (lint.py checks that plotting scripts import it); "cmsplot" if none
+style_module = "cmsplot"
+
+# CMS label per era: cms_label(ax, **cmsproject.label("run3"))
+# rlabel uses matplotlib mathtext; rlabel_html (optional) is the Plotly form
+[era.run3]
+com = 13.6
+rlabel = "2024, X fb$^{-1}$ (13.6 TeV)"
+rlabel_html = "2024, X fb<sup>−1</sup> (13.6 TeV)"
+
+[era.sim]
+com = 13.6
+data = false
+rlabel = "Simulation"
+
+# x-axis names, unit included: ax.set_xlabel(cmsproject.axis("m_jpsik"))
+[axis]
+m_jpsik = '$m(J/\psi\,K^+)$ [GeV]'
+m_mumu = '$m(\mu^+\mu^-)$ [GeV]'
+
+# legend labels for the physics objects: label=cmsproject.name("signal")
+[name]
+signal = '$B^+\to J/\psi\,K^+$'
+
+# fixed SERIES slot per species, the same on every canvas of the project:
+# color=SERIES[cmsproject.slot("signal")]
+[species]
+signal = "s1"
+partreco = "s2"

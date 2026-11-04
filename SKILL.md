@@ -1,9 +1,36 @@
 ---
 name: cms-plotting
-description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results, in matplotlib/mplhep and in Plotly/plotlyhep (interactive figures for HTML slides). Use whenever writing or editing code that saves or embeds a plot in a HEP/CMS analysis (matplotlib, mplhep, plotly, plotlyhep), before reporting any fitted number, or when choosing figures for a note or slides.
+description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results, in matplotlib/mplhep and in Plotly/plotlyhep (interactive figures for HTML slides). Use whenever writing or editing code that saves or embeds a plot in a HEP/CMS analysis (matplotlib, mplhep, plotly, plotlyhep), before reporting any fitted number, or when choosing figures for a note or slides. Reads the project's own customization (physics, labels, colours, rules) from <project>/.claude/cms-plotting/ first.
 ---
 
 # CMS plotting
+
+## First: the project's customization
+
+Every project keeps its own part of this skill in **`<project>/.claude/cms-plotting/`**. Read it before
+plotting; where it and this file disagree, the project wins.
+
+| file | holds |
+|---|---|
+| `physics.md` | the process and channels, each observable's spectrum (peaks, thresholds, reflections, resolution), the fit models, what is blind |
+| `style.toml` | `style_module`, CMS label per era (`[era.*]`), x-axis names (`[axis]`), legend names (`[name]`), the fixed `SERIES` slot per species (`[species]`) |
+| `rules.md` | rules the user added for this project, each with its reason |
+
+No folder yet: copy `custom-template/` from this skill's base directory to `<project>/.claude/cms-plotting/`
+and fill it from the codebase, the analysis note and the conversation; ask the user for what you cannot
+find. Keep it up to date: a new era, observable or species goes into `style.toml`; a correction from the user
+goes into `rules.md` the same turn. The folder lives in the project repository, never in this public one.
+
+Scripts take labels from it rather than retyping them (`cmsproject.py`, plain Python, either back end):
+
+```python
+import cmsproject as cp                              # copy next to the project's style module, like cmsplot.py
+cms_label(ax, **cp.label("run3"))                    # Plotly: cp.label("run3", html=True)
+ax.set_xlabel(cp.axis("m_jpsik"))
+ax.fill_between(..., color=SERIES[cp.slot("signal")], label=cp.name("signal"))
+```
+
+`lint.py` takes the project's `style_module` from `style.toml` when `--style-module` is not given.
 
 `cmsplot.py` (next to this file) is the style: mplhep CMS style on import, `cms_label`, fit + pull axes,
 `draw_pull`, `bin_label`, the validated `SERIES` palette, `save` / `save_panels`. A project either imports it

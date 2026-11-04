@@ -38,6 +38,19 @@ git clone https://github.com/DickyChant/cms-plotting .claude/skills/cms-plotting
 Update with `git -C ~/.claude/skills/cms-plotting pull`. The skill loads whenever Claude writes plotting
 code or reports fitted numbers.
 
+## Per-project customization
+
+The skill holds what every CMS analysis shares. What is specific to one analysis lives in that project, in
+`.claude/cms-plotting/` (start from `custom-template/`):
+
+- `physics.md` -- process, observables and what their spectra look like, fit models, blind quantities;
+- `style.toml` -- style module, CMS label per era, axis names, legend names, fixed colour slot per species;
+- `rules.md` -- the project's own plotting and reporting rules.
+
+Claude reads the folder before plotting (and creates it from the template when it is missing);
+`cmsproject.py` reads `style.toml` in scripts (`cms_label(ax, **cmsproject.label("run3"))`), and `lint.py`
+takes the style module from it.
+
 ## Use without Claude
 
 `cmsplot.py` is a standalone module (numpy, matplotlib, optional mplhep). Copy it into

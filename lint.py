@@ -4,11 +4,11 @@ Exit code 1 if anything is flagged.
 
     python lint.py scripts/foo.py [more.py ...] [--style-module mypkg.plotting]
 
---style-module: the module that carries the house style in this project (default: cmsplot, cmsplot_plotly,
-or any module whose name ends in "plotting").
+--style-module: the module that carries the house style in this project (default: style_module from the
+project's .claude/cms-plotting/style.toml, else cmsplot, cmsplot_plotly or any module ending in "plotting").
 """
 from __future__ import annotations
-import argparse, re, sys
+import argparse, os, re, sys
 
 # y-label call sites: matplotlib ax.set_ylabel(...), plotlyhep php.set_ylabel(fig, ...), cmsplot_plotly ylabel(fig, ...),
 # Plotly update_yaxes(title=...) / update_layout(yaxis_title=...)
@@ -86,6 +86,13 @@ if __name__ == "__main__":
     ap.add_argument("files", nargs="+")
     ap.add_argument("--style-module", default=None)
     a = ap.parse_args()
+    if a.style_module is None:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        try:
+            import cmsproject
+            a.style_module = cmsproject.style_module()
+        except Exception:
+            pass
     bad = 0
     for p in a.files:
         if p.endswith(("cmsplot.py", "cmsplot_plotly.py", "plotting.py")):
