@@ -1,5 +1,6 @@
 # Project plotting customization, read by the cms-plotting skill, lint.py and cmsproject.py.
-# Copy this folder to <project>/.claude/cms-plotting/ and replace the placeholders.
+# Copy this folder to ~/.config/cms-plotting/<project>/ (<project> = the repository's folder name) and
+# replace the placeholders. Keep it out of the project repository.
 
 # the project's style module (lint.py checks that plotting scripts import it); "cmsplot" if none
 style_module = "cmsplot"

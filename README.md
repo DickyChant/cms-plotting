@@ -40,13 +40,16 @@ code or reports fitted numbers.
 
 ## Per-project customization
 
-The skill holds what every CMS analysis shares. What is specific to one analysis lives in that project, in
-`.claude/cms-plotting/` (start from `custom-template/`):
+The skill holds what every CMS analysis shares. What is specific to one analysis lives in a folder of its own,
+outside the project repository so it is never pushed with the code: `~/.config/cms-plotting/<project>/`, where
+`<project>` is the repository's folder name (start from `custom-template/`; `$CMS_PLOTTING_CUSTOM` overrides the
+location, and `<project>/.claude/cms-plotting/` is read as a fallback for projects that want it committed):
 
 - `physics.md` -- process, observables and what their spectra look like, fit models, blind quantities;
 - `style.toml` -- style module, CMS label per era, axis names, legend names, fixed colour slot per species;
 - `rules.md` -- the project's own plotting and reporting rules.
 
+To share it between your hosts, make `~/.config/cms-plotting/` a private git repository or a synced folder.
 Claude reads the folder before plotting (and creates it from the template when it is missing);
 `cmsproject.py` reads `style.toml` in scripts (`cms_label(ax, **cmsproject.label("run3"))`), and `lint.py`
 takes the style module from it.

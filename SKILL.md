@@ -1,14 +1,20 @@
 ---
 name: cms-plotting
-description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results, in matplotlib/mplhep and in Plotly/plotlyhep (interactive figures for HTML slides). Use whenever writing or editing code that saves or embeds a plot in a HEP/CMS analysis (matplotlib, mplhep, plotly, plotlyhep), before reporting any fitted number, or when choosing figures for a note or slides. Reads the project's own customization (physics, labels, colours, rules) from <project>/.claude/cms-plotting/ first.
+description: CMS-style analysis canvases (mass fits with pulls, weighted spectra, method comparisons, scans, toy calibrations) and the rules for showing results, in matplotlib/mplhep and in Plotly/plotlyhep (interactive figures for HTML slides). Use whenever writing or editing code that saves or embeds a plot in a HEP/CMS analysis (matplotlib, mplhep, plotly, plotlyhep), before reporting any fitted number, or when choosing figures for a note or slides. Reads the project's own customization (physics, labels, colours, rules) from ~/.config/cms-plotting/<project>/ first.
 ---
 
 # CMS plotting
 
 ## First: the project's customization
 
-Every project keeps its own part of this skill in **`<project>/.claude/cms-plotting/`**. Read it before
-plotting; where it and this file disagree, the project wins.
+Every project has its own part of this skill: a customization folder, kept **outside** the project
+repository so analysis specifics are never pushed with the code. Find it in this order:
+
+1. `$CMS_PLOTTING_CUSTOM` (a folder),
+2. `~/.config/cms-plotting/<project>/`, where `<project>` is the name of the repository's top folder,
+3. `<project>/.claude/cms-plotting/` -- only for a project that chooses to commit its customization.
+
+Read it before plotting; where it and this file disagree, the project wins.
 
 | file | holds |
 |---|---|
@@ -16,10 +22,11 @@ plotting; where it and this file disagree, the project wins.
 | `style.toml` | `style_module`, CMS label per era (`[era.*]`), x-axis names (`[axis]`), legend names (`[name]`), the fixed `SERIES` slot per species (`[species]`) |
 | `rules.md` | rules the user added for this project, each with its reason |
 
-No folder yet: copy `custom-template/` from this skill's base directory to `<project>/.claude/cms-plotting/`
+No folder yet: copy `custom-template/` from this skill's base directory to `~/.config/cms-plotting/<project>/`
 and fill it from the codebase, the analysis note and the conversation; ask the user for what you cannot
 find. Keep it up to date: a new era, observable or species goes into `style.toml`; a correction from the user
-goes into `rules.md` the same turn. The folder lives in the project repository, never in this public one.
+goes into `rules.md` the same turn. Never copy it into the project repository or into this public one. To
+share it between hosts, `~/.config/cms-plotting/` can be a private git repository or a synced folder.
 
 Scripts take labels from it rather than retyping them (`cmsproject.py`, plain Python, either back end):
 
