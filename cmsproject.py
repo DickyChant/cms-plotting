@@ -1,4 +1,4 @@
-"""cmsproject -- read a project's plotting customization (style.toml in its customization folder).
+"""cmsproject -- read a project's plotting customization (<project>/.claude/cms-plotting/style.toml).
 
 No plotting imports, so it works with either back end:
 
@@ -7,8 +7,7 @@ No plotting imports, so it works with either back end:
     cms_label(fig, **cp.label("run3", html=True))      # Plotly (cmsplot_plotly)
     ax.set_xlabel(cp.axis("m_jpsik")); color = SERIES[cp.slot("signal")]
 
-The folder is, in this order: $CMS_PLOTTING_CUSTOM; ~/.config/cms-plotting/<project>/ with <project> the name
-of the repository's top folder (found from the working directory); <project>/.claude/cms-plotting/.
+The file is found by walking up from the working directory; CMS_PLOTTING_CUSTOM points elsewhere.
 """
 from __future__ import annotations
 
@@ -22,13 +21,6 @@ except ModuleNotFoundError:  # Python < 3.11
     import tomli as tomllib
 
 REL = Path(".claude") / "cms-plotting" / "style.toml"
-HOME = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / "cms-plotting"
-
-
-def project_root(start="."):
-    """Top folder of the repository containing start (the first parent with .git), else start itself."""
-    here = Path(start).resolve()
-    return next((d for d in [here, *here.parents] if (d / ".git").exists()), here)
 
 
 def find(start="."):
@@ -37,10 +29,9 @@ def find(start="."):
     if env:
         p = Path(env)
         return p / "style.toml" if p.is_dir() else p
-    root = project_root(start)
-    for p in (HOME / root.name / "style.toml", root / REL):
-        if p.is_file():
-            return p
+    for d in [Path(start).resolve(), *Path(start).resolve().parents]:
+        if (d / REL).is_file():
+            return d / REL
     return None
 
 
@@ -57,8 +48,7 @@ def load(path=None):
 def _get(section, key):
     d = load().get(section, {})
     if key not in d:
-        raise KeyError(f"'{key}' not in [{section}] of {find() or HOME / project_root().name / 'style.toml'}"
-                       f" (known: {', '.join(d) or 'none'})")
+        raise KeyError(f"'{key}' not in [{section}] of {find() or REL} (known: {', '.join(d) or 'none'})")
     return d[key]
 
 
